@@ -51,7 +51,10 @@ in
 ~~~
 
 #### ActivitiesTitles
+
+
 ```
+{% raw %}
 let
     Source = Json.Document(Web.Contents(веб-хук, вытягивающий с портала названия активностей)),
     result = Source[result],
@@ -63,7 +66,9 @@ let
     #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"Column1.ID", "ActivityID"}, {"Column1.VALUE", "Title_original"}})
 in
     #"Renamed Columns"
+{% endraw %}
 ```
+
 
 #### Companies 
 ~~~
