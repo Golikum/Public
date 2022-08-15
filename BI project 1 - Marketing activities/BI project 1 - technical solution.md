@@ -72,6 +72,7 @@ in
 
 #### Companies 
 ~~~
+{% raw %}
 let
     Source = ПолучитьДанные ("companies"),
     #"Converted to Table" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
@@ -82,10 +83,12 @@ let
     #"Renamed Columns1" = Table.RenameColumns(#"Changed Type",{{"CompanyName", "CompanyName_original"}})
 in
     #"Renamed Columns1"
+    {% endraw %}
 ~~~
 
 #### Contacts 
 ~~~
+{% raw %}
 let
     Source = Contacts_from_source,
     #"Expanded Column1.json" = Table.ExpandRecordColumn(Source, "Column1.json", {"COMPANY_ID"}, {"Column1.json.COMPANY_ID"}),
@@ -94,10 +97,12 @@ let
     #"Renamed Columns1" = Table.RenameColumns(#"Changed Type",{{"Title", "Title_original"}})
 in
     #"Renamed Columns1"
+    {% endraw %}
 ~~~
 
 #### Deals
 ~~~
+{% raw %}
 let
     Source = ПолучитьДанные ("deals"),
     #"Converted to Table" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
@@ -110,10 +115,12 @@ let
     #"Renamed Columns1" = Table.RenameColumns(#"Changed Type1",{{"Title", "Title_original"}})
 in
     #"Renamed Columns1"
+    {% endraw %}
 ~~~
 
 #### Stages
 ~~~
+{% raw %}
 let
     Source = ПолучитьДанные ("stages"),
     #"Converted to Table" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
@@ -122,10 +129,12 @@ let
     #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"Name", type text}, {"StageID", type text}, {"Stage_type", type text}})
 in
     #"Changed Type"
+    {% endraw %}
 ~~~
 
 #### Contacts_from_source (промежуточная таблица)
 ~~~
+{% raw %}
 let
     Client = ПолучитьДанные("contacts"),
     #"Converted to Table" = Table.FromList(Client, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
@@ -134,4 +143,5 @@ let
     #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"ContactID", Int64.Type}, {"Title", type text}, {"Create_date", type date}})
 in
     #"Changed Type"
+    {% endraw %}
 ~~~
