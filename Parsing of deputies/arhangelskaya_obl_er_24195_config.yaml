@@ -1,0 +1,190 @@
+---
+config:
+    agent: Chrome
+    debug: 2
+do:
+    - walk:
+        to: https://ideputat.er.ru/
+        do:
+        # Находим ссылки на страницы регионов
+        - find:
+            path: 'div[id*="edit-region"] > a'
+            # Определяем список регионов (по номеру блока). Можно указать один номер или диапазон вида от и до -  "12:18"
+            slice: 4
+            do:
+                #- object_new: region
+                - parse
+                - variable_set: current_region
+                #- object_field_set:
+                    #object: region
+                    #field: region_name
+                - parse:
+                    attr: href                    
+                    # Начинаем работать со страницей региона
+                - walk:
+                    to: value
+                    do:  
+                        # Ищем родительский блок, чтобы поместить его в регистр (без этого не сработает link_add по первой странице)
+                        - find:
+                            path: body
+                            do:
+                              # Очищаем пул ссылок, чтобы в нём не было значений из предыдущего региона
+                            - pool_clear: paginator
+                            - link_add: 
+                                  pool: paginator
+                            - walk:
+                                  to: links
+                                  pool: paginator
+                                  do:
+                              
+                                    # Находим ссылку на следующую страницу списка депутатов и помещаем её в пул ссылок
+                                    - find:
+                                        path: '#views-dep-search-by-region > div > div > div.item-list > ul > li.pager-next > a'
+                                        do:
+                                        - parse:
+                                            attr: href
+                                        - normalize:
+                                            routine: url
+                                        - link_add:
+                                            pool: paginator
+                                    
+                                    # Находим ссылку на страницу депутата
+                                    - find:
+                                          path: div.views-field.views-field-field-lastname > a
+                                          # Ограничение количеста выборки депутатов с одной страницы: slice: 0:1
+                                          do:
+                                            - parse:
+                                                attr: href
+                                            # Нормализуем ссылку на страницу депутата
+                                            - normalize:
+                                                routine: url
+                                            - walk:
+                                                to: value
+                                                do:
+                                                - object_new: deputat
+
+                                                # Ищем родительский блок, чтобы получить контекст регистра
+                                                - find:
+                                                    path: body
+                                                    do:
+
+                                                    # Помещаем в объект значение региона
+                                                    - variable_get: current_region
+                                                    - object_field_set:
+                                                        object: deputat
+                                                        field: region
+
+                                                 # Блок ФИО
+                                                - find:
+                                                    path: .fio
+                                                    do:
+
+                                                        # Помещаем в объект значение региона
+                                                        - variable_get: current_region
+                                                        - object_field_set:
+                                                            object: deputat
+                                                            field: region
+                                                            #value: <%current_region%>
+                                                        
+                                                        - find:
+                                                            path: div.field-item.lastname
+                                                            do:
+                                                                - parse
+                                                                - object_field_set:
+                                                                    object: deputat
+                                                                    field: lastname
+                                                        - find:
+                                                            path: div.field-item.firstname
+                                                            do:
+                                                                - parse
+                                                                - object_field_set:
+                                                                    object: deputat
+                                                                    field: firstname
+                                                        - find:
+                                                            path: div.field-item.middlename
+                                                            do:
+                                                                - parse
+                                                                - object_field_set:
+                                                                    object: deputat
+                                                                    field: middlename
+                                                
+                                                # Блок 2 - уровень депутата и орган власти
+                                                - find:
+                                                    path: .block2
+                                                    do:             
+                                                        - find:
+                                                            path: div.field-item.level
+                                                            do:
+                                                                - parse
+                                                                - object_field_set:
+                                                                    object: deputat
+                                                                    field: level
+                                                        - find:
+                                                            path: div.field-item.deputy-authority
+                                                            do:  
+                                                                - find:
+                                                                    path: .field-content
+                                                                    do:                                    
+                                                                        - parse
+                                                                        - object_field_set:
+                                                                            object: deputat
+                                                                            field: deputy-authority   
+                                                   
+                                                # Блок 15 - соцсети                                 
+                                                - find:
+                                                    path: '#block-15'
+                                                    do:
+                                                        # Facebook - ссылка
+                                                        - find:
+                                                            path: div > div.tabs > a
+                                                            do:
+                                                                - parse:
+                                                                    attr: href
+                                                                - object_field_set:
+                                                                    object: deputat
+                                                                    field: facebook
+                                                        # Vkontake - вытаскивается html, запускающий скрипт с виджетом ВК. Последнее число в этом html - id пользователя в ВК            
+                                                        - find:
+                                                            path: div > script
+                                                            do:
+                                                                - parse:
+                                                                    format: html
+                                                                - object_field_set:
+                                                                    object: deputat
+                                                                    field: vk
+                            
+                                                # Адрес приёмной                                  
+                                                - find:
+                                                    path: '#fieldblock-user-user-default-field-contact-addr > div > div > div'
+                                                    do:
+                                                        - parse
+                                                        - object_field_set:
+                                                            object: deputat
+                                                            field: contact-addr
+                                                            
+                                                # Контактные телефоны                                
+                                                - find:
+                                                    path: '#fieldblock-user-user-default-field-contact-phones > div > div > div'
+                                                    do:
+                                                        - parse
+                                                        - object_field_set:
+                                                            object: deputat
+                                                            field: phones                                
+                            
+                                                # Электронная почта                                  
+                                                - find:
+                                                    path: '#fieldblock-user-user-default-field-contact-email > div > div > div > a'
+                                                    do:
+                                                        - parse
+                                                        - object_field_set:
+                                                            object: deputat
+                                                            field: email                               
+                                                
+
+                                                    
+                                                - object_save:
+                                                    name: deputat
+                                                    #to: region
+                                                    
+                #- object_save:
+                    #name: region
