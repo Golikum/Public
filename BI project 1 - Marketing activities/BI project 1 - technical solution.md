@@ -26,6 +26,10 @@
 
 После этого формируются визуализации.
 
+### Модель данных
+
+![Модель данных](https://github.com/Golikum/Public/blob/780694f5c9e834a0828b7608754ff9b060b9e667/BI%20project%201%20-%20Marketing%20activities/%D0%9A%D0%BB%D0%B8%D0%B5%D0%BD%D1%82%201%20%D1%81%D1%85%D0%B5%D0%BC%D0%B0%20%D0%B2%D0%B7%D0%B0%D0%B8%D0%BC%D0%BE%D1%81%D0%B2%D1%8F%D0%B7%D0%B5%D0%B9.jpg?raw=true)
+
 
 ### Операции в Power Query
 
