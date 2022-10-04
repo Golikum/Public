@@ -3,30 +3,43 @@
 
 # In[2]:
 
-
 import pandas as pd
+import datetime
 
 # creating a dataframe from a csv file
 df = pd.read_csv('C:/Users/golik/Google Диск/Разное/Работа/Поиск работы 2022/Improvado home tasks/best_salesman_homework.csv', sep = ',')
 
-'''
-After the first superficial analysis, we see that for all successful deals there is also a record of the first touch. That is, there are no successful transactions in the reporting period that were initiated before it began.  
-Therefore, we can include all successful deals in the conversion calculation.  
-Let's group the deals by managers and calculate the conversion rate for each of them.
-'''
-
 # converting the data type in the "date" column to a date
 df['date'] = df['date'].astype('datetime64')
 
-# determine the earliest date of the event for each manager
-df_earliest_event = df.groupby('manager_nickname').date.min()
 
-# determine the date from which actions will be taken into account - the latest start of work from all managers
-start_date = df_earliest_event.max()
+# calculate the average duration of deals
 
-# remove events earlier than the start date
-df = df[df['date'] >= start_date]
-# print(df.sort_values('date'))
+# grouping events by client-manager pair
+df_delta = df.pivot_table(index = ['client_account_id', 'manager_id'], columns = 'event_name', values = 'date').reset_index()
+
+# remove deals in which there is no start or end date
+df_delta = df_delta[~(df_delta['deal'].isnull()) & ~(df_delta['first_touch'].isnull())]
+
+# calculate the duration between start and end
+df_delta['delta'] = df_delta['deal'] - df_delta['first_touch']
+df_delta['delta_days'] = df_delta['delta'].dt.days.astype('int16')
+
+# remove deals with negative duration (most likely these are new deals for the same client)
+df_delta = df_delta[df_delta['delta_days'] >= 0]
+
+# average duration
+avg_delta = df_delta['delta_days'].mean().round()
+
+
+# date of report
+report_date = df['date'].max()
+
+# the end date of the period for the first touch
+end_date = report_date - datetime.timedelta(days = avg_delta)
+
+# filtering events
+df = df[(df['event_name'] == 'deal') | (df['date'] <= end_date)]
 
 # grouping events by manager and type
 df_managers = df.groupby(['manager_nickname', 'event_name']).count().reset_index().rename(columns = {'client_account_id':'events'})
