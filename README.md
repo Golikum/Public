@@ -1,2 +1,2 @@
-# Денис Голиков  
-Публичный репозиторий
+# Denis Golikov  
+Public repository
